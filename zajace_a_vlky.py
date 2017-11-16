@@ -16,10 +16,10 @@ def func(x,t):
 
 	return [v, z] 
 
-x0,x1=float(raw_input("Poc. vlkov: ")),float(raw_input("Poc. zajacov: "))
+x0,x1=float(input("Poc. vlkov: ")),float(input("Poc. zajacov: "))
 x0=[x0,x1]
 
-t=[i/100.0 for i in range(0,input("Cas sim.: ")*100)]
+t=[i/100.0 for i in range(0,int(input("Cas sim.: "))*100)]
 
 sol=odeint(func, x0, t)
 
@@ -32,4 +32,4 @@ plt.title('Vyvoj mnozstva vlkov a zajacov')
 plt.legend(loc=0)
 
 plt.show()
-raw_input()
+#input()
