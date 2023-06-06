@@ -19,10 +19,7 @@ class Animacia:
         cas=data[0]
         data=data[1:]
         subor.close()
-        a=[]
-        for i in data:
-            a.append(abs(float(i.split(" ")[0])))
-        
+        a = [abs(float(i.split(" ")[0])) for i in data]
         l, = plt.plot([], [], '-o')
         a=max(a)
         a=max([a,self.ls])

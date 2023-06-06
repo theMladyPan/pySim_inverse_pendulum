@@ -210,15 +210,15 @@ class Mainframe(wx.Frame):
                     raise socket.error
             else:
                 self.s.connect((HOST, int(PORT)))
-                
-            self.richTextCtrl1.SetValue("Connected to %s:%s"%(HOST, PORT))
-            self.adresa.SetValue("%s:%s"%(str(HOST), str(PORT)))
+
+            self.richTextCtrl1.SetValue(f"Connected to {HOST}:{PORT}")
+            self.adresa.SetValue(f"{str(HOST)}:{str(PORT)}")
             self.adresa.Disable()
             self.connect_btn.SetLabel("Disconnect and Close")
             self.connect_btn.SetToolTipString(u'Terminate communication with host server and exit program')
             self.connected=True
             self.load_vars_btn.Enable()
-        
+
         except socket.error:
             self.richTextCtrl1.SetValue("Connection refused (no host listening?)")
         except socket.gaierror:
@@ -254,45 +254,46 @@ class Mainframe(wx.Frame):
         vrange=int(self.time_sldr.GetValue())
         vstep=int(self.step_sldr.GetValue())
         self.s.sendall("simu")
-        while self.s.recv(128)[0:3]!="gmt": pass
-        
+        while self.s.recv(128)[:3] != "gmt": pass
+
         self.richTextCtrl1.SetValue("Sending time frame")
         self.t=[t/1000.0*vstep for t in range(int(vrange*1000/vstep))]
-        
+
         self.s.sendall(str(len(self.t)+128))
-        while self.s.recv(128)[0:3]!="ack": pass
-        
+        while self.s.recv(128)[:3] != "ack": pass
+
         self.s.sendall("t=[t/1000.0*%d for t in range(int(%d*1000.0/%d))] "%(vstep, vrange, vstep))
-        
-        while self.s.recv(1024)[0:3]!="gmx": pass
+
+        while self.s.recv(1024)[:3] != "gmx": pass
         self.richTextCtrl1.SetValue("Sending default values")
         self.s.sendall("x0=[%f,%f,%f,%f,%f]\nK=%f"%(self.x1_0,self.x2_0,self.x3_0,self.x4_0, self.xf_0, self.xf_0))
-        
+
         data=self.s.recv(1024)
-        while data[0:4] != "data": data=self.s.recv(1024)[0:4]
-        
+        while data[:4] != "data":
+            data = self.s.recv(1024)[:4]
+
         self.richTextCtrl1.SetValue("Receiving values")
-        
+
         f = self.s.makefile('rb', int(data[4:])+1024 )
         data = pickle.load(f)
         f.close()
-        
+
         text=""
         for i in data:
             for j in i:
                 text+="%.3f "%j
             text+="\n"
         self.databaza.SetValue(text)
-        
+
         self.sol=data
         self.plot_btn.Enable()
         self.anime_btn.Enable()
         self.richTextCtrl1.SetValue("Simulation finished succesfully!\nData ready for plotting.")
-        
+
         subor=file("simulation.dat","w")
         subor.write(str(self.step_sldr.GetValue())+"\n"+self.databaza.GetValue())
         subor.close()
-        
+
         self.plot_btn.SetFocus()
         
     def plot_values(self, event):
@@ -325,8 +326,8 @@ class Mainframe(wx.Frame):
     def load_variables(self, event): #nasleduje vypocet bulharskych konstant
         vars="kP=%f\nkI=%f\n"%(self.kp_ctrl.GetValue(),self.ki_ctrl.GetValue())+self.variables_textctrl.GetValue()+"\nb2=-theta/(N01**2)\nb4=-N/(N01**2)\na22=-theta*Fr/(N01**2)\na23=-N**2*g/(N01**2)\na24=N*C/(N01**2)\na25=theta*N/(N01**2)\na42=N*Fr/(N01**2)\na43=M*N*g/(N01**2)\na44=-M*C/(N01**2)\na45=-N**2/(N01**2)"
 
-        self.s.sendall("exec"+vars)
-        while self.s.recv(16)[0:3]!="ack":pass
+        self.s.sendall(f"exec{vars}")
+        while self.s.recv(16)[:3] != "ack":pass
         self.richTextCtrl1.SetValue("Variables transmitted to server")
         self.load_vars_btn.SetLabel("Reload variables")
         exec(self.condt_txtctrl.GetValue().replace("x","self.x"))
